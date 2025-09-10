@@ -1,52 +1,120 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtCore import QUrl
+from PyQt5.QtWidgets import QApplication, QMainWindow, QToolBar, QAction, QLineEdit
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+
 
 class MainWindow(QMainWindow):
-   def __init__(self):
-       super(MainWindow, self).__init__()
-       self.browser = QWebEngineView()
-       self.browser.setUrl(QUrl('https://duckduckgo.com/'))
-       self.setCentralWidget(self.browser)
-       self.showMaximized()
+    def __init__(self):
+        super().__init__()
 
-       navbar = QToolBar()
-       self.addToolBar(navbar)
+        # Navegador
+        self.browser = QWebEngineView()
+        self.setCentralWidget(self.browser)
+        self.showMaximized()
 
-       back_btn = QAction('Voltar', self)
-       back_btn.triggered.connect(self.browser.back)
-       navbar.addAction(back_btn)
+        # Barra de navegação
+        navbar = QToolBar()
+        navbar.setMovable(False)
+        self.addToolBar(navbar)
 
-       forward_btn = QAction('Avançar', self)
-       forward_btn.triggered.connect(self.browser.forward)
-       navbar.addAction(forward_btn)
+        # Botões
+        back_btn = QAction("⏪", self)
+        back_btn.triggered.connect(self.browser.back)
+        navbar.addAction(back_btn)
 
-       reload_btn = QAction('Recarregar', self)
-       reload_btn.triggered.connect(self.browser.reload)
-       navbar.addAction(reload_btn)
+        forward_btn = QAction("⏩", self)
+        forward_btn.triggered.connect(self.browser.forward)
+        navbar.addAction(forward_btn)
 
-       home_btn = QAction('Home', self)
-       home_btn.triggered.connect(self.navigate_home)
-       navbar.addAction(home_btn)
+        reload_btn = QAction("🔄", self)
+        reload_btn.triggered.connect(self.browser.reload)
+        navbar.addAction(reload_btn)
 
-       self.url_bar = QLineEdit()
-       self.url_bar.returnPressed.connect(self.navigate_to_url)
-       navbar.addWidget(self.url_bar)
+        home_btn = QAction("🏠", self)
+        home_btn.triggered.connect(self.navigate_home)
+        navbar.addAction(home_btn)
 
-       self.browser.urlChanged.connect(self.update_url)
+        # Barra de URL
+        self.url_bar = QLineEdit()
+        self.url_bar.returnPressed.connect(self.navigate_to_url)
+        navbar.addWidget(self.url_bar)
 
-   def navigate_home(self):
-       self.browser.setUrl(QUrl('https://duckduckgo.com/'))
+        self.browser.urlChanged.connect(self.update_url)
 
-   def navigate_to_url(self):
-       url = self.url_bar.text()
-       self.browser.setUrl(QUrl(url))
+        # Tema Dark QSS para a interface
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #121212;
+            }
+            QToolBar {
+                background: #1f1f1f;
+                padding: 5px;
+                border-bottom: 2px solid #333;
+            }
+            QLineEdit {
+                background: #2c2c2c;
+                color: #ffffff;
+                padding: 6px;
+                border-radius: 12px;
+                border: 1px solid #555;
+                min-width: 400px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #00aaff;
+                background: #1a1a1a;
+            }
+            QToolButton {
+                background: transparent;
+                color: #ffffff;
+                padding: 6px;
+                font-size: 16px;
+            }
+            QToolButton:hover {
+                background: #333333;
+                border-radius: 8px;
+            }
+        """)
 
-   def update_url(self, q):
-       self.url_bar.setText(q.toString())
+        # Abrir página inicial com background customizado
+        self.navigate_home()
 
-app = QApplication(sys.argv)
-QApplication.setApplicationName('Infinite Browser')
-window = MainWindow()
-app.exec_()
+    def navigate_home(self):
+        # Página inicial customizada com fundo dark gradient
+        html = """
+        <html>
+        <body style="
+            margin:0;
+            height:100vh;
+            background: linear-gradient(to bottom right, #0f0f0f, #1a1a1a);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            color:#ffffff;
+            font-family:Arial, sans-serif;
+            text-align:center;">
+            <div>
+                <h1>🌑 Infinite Browser</h1>
+                <p>Digite uma URL acima ou use a pesquisa DuckDuckGo</p>
+            </div>
+        </body>
+        </html>
+        """
+        self.browser.setHtml(html, QUrl("about:blank"))
+
+    def navigate_to_url(self):
+        url = self.url_bar.text()
+        if not url.startswith(("http://", "https://")):
+            url = "http://" + url
+        self.browser.setUrl(QUrl(url))
+
+    def update_url(self, q):
+        self.url_bar.setText(q.toString())
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    QApplication.setApplicationName("Infinite Browser Dark")
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
