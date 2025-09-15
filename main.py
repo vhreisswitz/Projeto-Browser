@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
             font-family:Arial, sans-serif;
             text-align:center;">
             <div>
-                <h1>🌑 Infinite Browser</h1>
+                <h1>🌑 Infinity Browser</h1>
                 <p>Digite uma URL acima ou use a pesquisa DuckDuckGo</p>
             </div>
         </body>
@@ -114,7 +114,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    QApplication.setApplicationName("Infinite Browser Dark")
+    QApplication.setApplicationName("Infinity Browser Dark")
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
