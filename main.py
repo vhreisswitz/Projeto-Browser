@@ -3,7 +3,7 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QToolBar, QAction, QLineEdit
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-#codigo para intalar PyQt5 e PyQtWebEngine no cmd para poder rodar o script
+#codigo para instalar PyQt5 e PyQtWebEngine no cmd para poder rodar o script
 # pip install PyQt5 PyQtWebEngine
 
 class MainWindow(QMainWindow):
