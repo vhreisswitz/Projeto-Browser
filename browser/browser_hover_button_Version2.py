@@ -1,12 +1,47 @@
 import sys
 import os
 import re
-from PyQt5.QtCore import QUrl, QSettings, QPropertyAnimation, QEasingCurve, pyqtProperty, Qt
+from PyQt5.QtCore import QUrl, QSettings, QPropertyAnimation, QEasingCurve, pyqtProperty, Qt, QTimer
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QToolBar, QAction, 
                              QLineEdit, QMenu, QMessageBox, QTabWidget, QProgressBar,
-                             QWidget, QVBoxLayout, QHBoxLayout, QLabel, QToolButton)
+                             QWidget, QVBoxLayout, QHBoxLayout, QLabel, QToolButton, QGraphicsOpacityEffect)
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtGui import QIcon, QKeySequence, QPainter, QColor, QLinearGradient, QFont, QPalette
+
+# ---------------------------
+# Funções auxiliares de fade
+# ---------------------------
+def fade_out_widget(widget, duration=220):
+    """Aplica fade-out ao widget inteiro (não bloqueante)."""
+    try:
+        effect = QGraphicsOpacityEffect(widget)
+        widget.setGraphicsEffect(effect)
+        anim = QPropertyAnimation(effect, b"opacity")
+        anim.setDuration(duration)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.setEasingCurve(QEasingCurve.InOutQuad)
+        anim.start(QPropertyAnimation.DeleteWhenStopped)
+        # Guardar referência para evitar GC prematuro
+        widget._last_fade_anim = anim
+    except Exception:
+        pass
+
+
+def fade_in_widget(widget, duration=300):
+    """Aplica fade-in ao widget inteiro (não bloqueante)."""
+    try:
+        effect = QGraphicsOpacityEffect(widget)
+        widget.setGraphicsEffect(effect)
+        anim = QPropertyAnimation(effect, b"opacity")
+        anim.setDuration(duration)
+        anim.setStartValue(0.0)
+        anim.setEndValue(1.0)
+        anim.setEasingCurve(QEasingCurve.InOutQuad)
+        anim.start(QPropertyAnimation.DeleteWhenStopped)
+        widget._last_fade_anim = anim
+    except Exception:
+        pass
 
 # Classe para botões com efeitos hover
 class HoverButton(QToolButton):
@@ -144,6 +179,12 @@ class MainWindow(QMainWindow):
         
         # Aplicar tema dark com hovers aprimorados
         self.apply_enhanced_dark_theme()
+<<<<<<< Updated upstream:browser/browser_hover_button_Version2.py
+=======
+        
+        # Adicionar aba inicial direto com página inicial
+        self.add_new_tab()
+>>>>>>> Stashed changes:browser/main.py
 
     def create_navigation_bar(self):
         navbar = QToolBar()
@@ -258,8 +299,12 @@ class MainWindow(QMainWindow):
         # Adicionar ícone de carregamento
         tab_index = self.tabs.addTab(browser, "🔄 Carregando...")
         
+        # Se o set_current for True, vamos aplicar um pequeno efeito de transição
         if set_current:
-            self.tabs.setCurrentIndex(tab_index)
+            # fade-out da janela inteira antes de ativar a aba, para dar sensação de troca cinematográfica
+            fade_out_widget(self)
+            # esperar um pouco e então ativar a aba e aplicar fade-in
+            QTimer.singleShot(200, lambda idx=tab_index: (self.tabs.setCurrentIndex(idx), fade_in_widget(self)))
         
         if url:
             browser.setUrl(QUrl(url))
@@ -269,7 +314,7 @@ class MainWindow(QMainWindow):
         return browser
 
     def navigate_home(self):
-        # Página inicial customizada COM BARRA DE PESQUISA ANIMADA
+        # Página inicial customizada COM BARRA DE PESQUISA ANIMADA (agora usando Google)
         html = """
         <!DOCTYPE html>
         <html lang="en">
@@ -473,30 +518,6 @@ class MainWindow(QMainWindow):
                     top: 10px;
                 }
                 
-                .features {
-                    margin-top: 60px;
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 20px;
-                    max-width: 600px;
-                }
-                
-                .feature {
-                    background: rgba(106, 90, 205, 0.1);
-                    padding: 20px;
-                    border-radius: 15px;
-                    transition: all 0.3s ease;
-                    border: 1px solid transparent;
-                    backdrop-filter: blur(10px);
-                }
-                
-                .feature:hover {
-                    background: rgba(106, 90, 205, 0.2);
-                    border-color: #6a5acd;
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 25px rgba(106, 90, 205, 0.3);
-                }
-                
                 .shortcuts {
                     margin-top: 40px;
                     font-size: 1em;
@@ -513,9 +534,6 @@ class MainWindow(QMainWindow):
                     }
                     .search-wrapper.active .input-holder {
                         width: 350px;
-                    }
-                    .features {
-                        grid-template-columns: 1fr;
                     }
                 }
             </style>
@@ -535,13 +553,6 @@ class MainWindow(QMainWindow):
                     </div>
                     <span class="close" onclick="searchToggle(this, event);"></span>
                 </div>
-            </div>
-            
-            <div class="features">
-                <div class="feature">🚀 Navegação Rápida</div>
-                <div class="feature">🎨 Tema Escuro</div>
-                <div class="feature">🔒 Navegação Segura</div>
-                <div class="feature">🔍 Busca Animada</div>
             </div>
             
             <div class="shortcuts">
@@ -576,8 +587,8 @@ class MainWindow(QMainWindow):
                             if (e.key === 'Enter') {
                                 const searchTerm = this.value.trim();
                                 if (searchTerm) {
-                                    // Usa DuckDuckGo para busca
-                                    window.location.href = 'https://duckduckgo.com/?q=' + encodeURIComponent(searchTerm);
+                                    // Usa Google para busca
+                                    window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(searchTerm);
                                 }
                             }
                         });
@@ -598,7 +609,9 @@ class MainWindow(QMainWindow):
         </body>
         </html>
         """
+        # Aplica o HTML e faz fade-in (para a janela inteira) para dar efeito de abertura da home
         self.current_browser().setHtml(html, QUrl("about:blank"))
+        fade_in_widget(self)
 
     def is_localhost_with_port(self, text):
         """Verifica se é um endereço local com porta"""
@@ -634,17 +647,22 @@ class MainWindow(QMainWindow):
         if self.is_localhost_with_port(url):
             if not url.startswith(('http://', 'https://')):
                 url = 'http://' + url
+            # antes de carregar, aplicar fade-out na janela inteira
+            fade_out_widget(self)
             self.current_browser().setUrl(QUrl(url))
             return
         
         # Se for termo de busca (contém espaços ou não parece uma URL)
         if ' ' in url or not self.looks_like_url(url):
-            url = f"https://duckduckgo.com/?q={url.replace(' ', '+')}"
+            # alterado para usar Google
+            url = f"https://www.google.com/search?q={url.replace(' ', '+')}"
         
         # Adiciona protocolo se necessário
         elif not url.startswith(('http://', 'https://', 'ftp://', 'file://')):
             url = 'https://' + url
             
+        # Antes de navegar, aplicar fade-out na janela inteira
+        fade_out_widget(self)
         self.current_browser().setUrl(QUrl(url))
 
     def update_url_bar(self, url):
@@ -678,6 +696,8 @@ class MainWindow(QMainWindow):
             index = self.tabs.indexOf(browser)
             if index != -1 and not browser.title():
                 self.tabs.setTabText(index, "Nova Aba")
+        # Ao finalizar o carregamento, aplicamos fade-in na janela inteira
+        fade_in_widget(self)
 
     def current_browser(self):
         return self.tabs.currentWidget()
@@ -698,6 +718,9 @@ class MainWindow(QMainWindow):
                 self.update_url_bar(browser.url())
                 # Atualizar estado dos botões de navegação
                 self.update_navigation_buttons()
+                # Efeito visual: ao trocar de aba, aplicamos um fade-in para a janela inteira
+                # (isso produz a sensação de troca cinematográfica que você pediu)
+                fade_in_widget(self)
 
     def update_navigation_buttons(self):
         # Esta função pode ser expandida para atualizar o estado dos botões
@@ -738,7 +761,10 @@ class MainWindow(QMainWindow):
                          "<h3>Infinity Browser Dark</h3>"
                          "<p>Versão 2.1</p>"
                          "<p>Um navegador web moderno com tema escuro</p>"
+<<<<<<< Updated upstream:browser/browser_hover_button_Version2.py
                          "<p>Com barra de pesquisa animada integrada</p>"
+=======
+>>>>>>> Stashed changes:browser/main.py
                          "<p>Desenvolvido com PyQt5 e QWebEngine</p>")
 
     def load_settings(self):
